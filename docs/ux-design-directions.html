@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSight - Design Direction Mockups</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .navigation {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            position: sticky;
+            top: 100px;
+            z-index: 99;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .nav-btn:hover {
+            border-color: #0d9488;
+            color: #0d9488;
+        }
+
+        .nav-btn.active {
+            background: #0d9488;
+            color: white;
+            border-color: #0d9488;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .direction {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .direction.active {
+            display: block;
+        }
+
+        .direction-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .direction-name {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+
+        .direction-personality {
+            color: #0d9488;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+
+        .direction-description {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .direction-features {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .feature-tag {
+            padding: 0.25rem 0.75rem;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        .mockup {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        /* Direction 1: Spacious Dashboard */
+        .dir1-nav {
+            background: #0d9488;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dir1-nav h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .dir1-nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .dir1-nav-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .dir1-nav-links a:hover {
+            opacity: 1;
+        }
+
+        .dir1-content {
+            padding: 3rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .dir1-section {
+            margin-bottom: 3rem;
+        }
+
+        .dir1-section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #0f172a;
+        }
+
+        .dir1-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .dir1-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .dir1-card-title {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .dir1-card-amount {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+        }
+
+        .dir1-progress {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .dir1-progress-bar {
+            height: 100%;
+            background: #14b8a6;
+            border-radius: 4px;
+        }
+
+        .dir1-progress-bar.warning {
+            background: #fbbf24;
+        }
+
+        .dir1-progress-bar.error {
+            background: #f87171;
+        }
+
+        .dir1-card-status {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Direction 2: Dense Information */
+        .dir2-nav {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dir2-nav h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .dir2-nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .dir2-nav-links a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .dir2-nav-links a:hover {
+            color: #0d9488;
+        }
+
+        .dir2-content {
+            padding: 1.5rem 2rem;
+        }
+
+        .dir2-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .dir2-main {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .dir2-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .dir2-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .dir2-card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .dir2-card-amount {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .dir2-progress-small {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .dir2-progress-small .dir1-progress-bar {
+            height: 100%;
+        }
+
+        /* Direction 3: Card Gallery */
+        .dir3-content {
+            padding: 2rem;
+        }
+
+        .dir3-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .dir3-header h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .dir3-header p {
+            color: #64748b;
+        }
+
+        .dir3-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .dir3-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .dir3-card:hover {
+            border-color: #0d9488;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+        }
+
+        .dir3-card-icon {
+            width: 48px;
+            height: 48px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .dir3-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .dir3-card-amount {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Direction 4: Sidebar Navigation */
+        .dir4-layout {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .dir4-sidebar {
+            width: 240px;
+            background: #0f172a;
+            color: white;
+            padding: 2rem 1rem;
+        }
+
+        .dir4-sidebar h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        .dir4-sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .dir4-sidebar-nav a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .dir4-sidebar-nav a:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .dir4-sidebar-nav a.active {
+            background: #0d9488;
+            color: white;
+        }
+
+        .dir4-main {
+            flex: 1;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+
+        .dir4-section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dir4-section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .dir4-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .dir4-stat {
+            text-align: center;
+        }
+
+        .dir4-stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 0.25rem;
+        }
+
+        .dir4-stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        /* Direction 5: Minimal Focus */
+        .dir5-content {
+            padding: 3rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .dir5-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .dir5-header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .dir5-header p {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        .dir5-main-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .dir5-category {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .dir5-category:last-child {
+            border-bottom: none;
+        }
+
+        .dir5-category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .dir5-category-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .dir5-category-amount {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        /* Direction 6: Balanced Dashboard */
+        .dir6-nav {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+        }
+
+        .dir6-nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dir6-nav h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .dir6-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dir6-top {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dir6-summary-card {
+            background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .dir6-summary-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .dir6-summary-value {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .dir6-categories {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .dir6-category-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .dir6-category-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .dir6-category-name {
+            font-weight: 600;
+        }
+
+        .dir6-category-budget {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .dir6-progress-large {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .dir6-progress-large .dir1-progress-bar {
+            height: 100%;
+        }
+
+        /* Common styles */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0b8378;
+        }
+
+        .btn-secondary {
+            background: #0891b2;
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #0d9488;
+            color: #0d9488;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #14b8a6;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #fbbf24;
+            color: #0f172a;
+        }
+
+        .badge-error {
+            background: #f87171;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 FinSight Design Direction Mockups</h1>
+        <p>Explore 6 different design approaches for your dashboard. Each shows a complete vision for your app's look and feel.</p>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn active" onclick="showDirection(1)">1. Spacious Dashboard</button>
+        <button class="nav-btn" onclick="showDirection(2)">2. Dense Information</button>
+        <button class="nav-btn" onclick="showDirection(3)">3. Card Gallery</button>
+        <button class="nav-btn" onclick="showDirection(4)">4. Sidebar Navigation</button>
+        <button class="nav-btn" onclick="showDirection(5)">5. Minimal Focus</button>
+        <button class="nav-btn" onclick="showDirection(6)">6. Balanced Dashboard</button>
+    </div>
+
+    <div class="container">
+        <!-- Direction 1: Spacious Dashboard -->
+        <div class="direction active" id="dir1">
+            <div class="direction-header">
+                <div class="direction-name">1. Spacious Dashboard</div>
+                <div class="direction-personality">Professional & Efficient</div>
+                <div class="direction-description">Generous white space and clear visual hierarchy. Perfect for users who want clarity without overwhelm. Each element has room to breathe, making it easy to focus on what matters.</div>
+                <div class="direction-features">
+                    <span class="feature-tag">Top Navigation</span>
+                    <span class="feature-tag">Spacious Layout</span>
+                    <span class="feature-tag">Card-Based</span>
+                    <span class="feature-tag">Balanced Density</span>
+                </div>
+            </div>
+            <div class="mockup">
+                <div class="dir1-nav">
+                    <h2>FinSight</h2>
+                    <div class="dir1-nav-links">
+                        <a href="#">Dashboard</a>
+                        <a href="#">Transactions</a>
+                        <a href="#">Budget</a>
+                        <a href="#">Settings</a>
+                    </div>
+                </div>
+                <div class="dir1-content">
+                    <div class="dir1-section">
+                        <div class="dir1-section-title">Budget Overview</div>
+                        <div class="dir1-cards">
+                            <div class="dir1-card">
+                                <div class="dir1-card-title">Groceries</div>
+                                <div class="dir1-card-amount">$450</div>
+                                <div class="dir1-progress">
+                                    <div class="dir1-progress-bar" style="width: 90%"></div>
+                                </div>
+                                <div class="dir1-card-status">$50 remaining of $500</div>
+                            </div>
+                            <div class="dir1-card">
+                                <div class="dir1-card-title">Dining Out</div>
+                                <div class="dir1-card-amount">$180</div>
+                                <div class="dir1-progress">
+                                    <div class="dir1-progress-bar" style="width: 72%"></div>
+                                </div>
+                                <div class="dir1-card-status">$70 remaining of $250</div>
+                            </div>
+                            <div class="dir1-card">
+                                <div class="dir1-card-title">Entertainment</div>
+                                <div class="dir1-card-amount">$120</div>
+                                <div class="dir1-progress">
+                                    <div class="dir1-progress-bar warning" style="width: 96%"></div>
+                                </div>
+                                <div class="dir1-card-status">$5 remaining of $125</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 2: Dense Information -->
+        <div class="direction" id="dir2">
+            <div class="direction-header">
+                <div class="direction-name">2. Dense Information</div>
+                <div class="direction-personality">Information-Rich & Compact</div>
+                <div class="direction-description">More information visible at once. Perfect for power users who want to see everything without scrolling. Efficient use of space while maintaining readability.</div>
+                <div class="direction-features">
+                    <span class="feature-tag">Top Navigation</span>
+                    <span class="feature-tag">Dense Layout</span>
+                    <span class="feature-tag">Multi-Column</span>
+                    <span class="feature-tag">Information-Rich</span>
+                </div>
+            </div>
+            <div class="mockup">
+                <div class="dir2-nav">
+                    <h2>FinSight</h2>
+                    <div class="dir2-nav-links">
+                        <a href="#">Dashboard</a>
+                        <a href="#">Transactions</a>
+                        <a href="#">Budget</a>
+                        <a href="#">Settings</a>
+                    </div>
+                </div>
+                <div class="dir2-content">
+                    <div class="dir2-grid">
+                        <div class="dir2-main">
+                            <div class="dir2-card">
+                                <div class="dir2-card-header">
+                                    <div class="dir2-card-title">Groceries</div>
+                                    <div class="dir2-card-amount">$450 / $500</div>
+                                </div>
+                                <div class="dir2-progress-small">
+                                    <div class="dir1-progress-bar" style="width: 90%"></div>
+                                </div>
+                            </div>
+                            <div class="dir2-card">
+                                <div class="dir2-card-header">
+                                    <div class="dir2-card-title">Dining Out</div>
+                                    <div class="dir2-card-amount">$180 / $250</div>
+                                </div>
+                                <div class="dir2-progress-small">
+                                    <div class="dir1-progress-bar" style="width: 72%"></div>
+                                </div>
+                            </div>
+                            <div class="dir2-card">
+                                <div class="dir2-card-header">
+                                    <div class="dir2-card-title">Entertainment</div>
+                                    <div class="dir2-card-amount">$120 / $125</div>
+                                </div>
+                                <div class="dir2-progress-small">
+                                    <div class="dir1-progress-bar warning" style="width: 96%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dir2-main">
+                            <div class="dir2-card">
+                                <div class="dir2-card-title" style="margin-bottom: 0.75rem;">Quick Actions</div>
+                                <button class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Upload Transactions</button>
+                                <button class="btn btn-outline" style="width: 100%;">Edit Budget</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 3: Card Gallery -->
+        <div class="direction" id="dir3">
+            <div class="direction-header">
+                <div class="direction-name">3. Card Gallery</div>
+                <div class="direction-personality">Visual & Engaging</div>
+                <div class="direction-description">Large, visually distinct cards that make each category feel important. Great for users who appreciate visual organization and want categories to feel tangible.</div>
+                <div class="direction-features">
+                    <span class="feature-tag">Centered Layout</span>
+                    <span class="feature-tag">Large Cards</span>
+                    <span class="feature-tag">Visual Focus</span>
+                    <span class="feature-tag">Grid-Based</span>
+                </div>
+            </div>
+            <div class="mockup">
+                <div class="dir3-content">
+                    <div class="dir3-header">
+                        <h2>Your Budget</h2>
+                        <p>January 2025</p>
+                    </div>
+                    <div class="dir3-grid">
+                        <div class="dir3-card">
+                            <div class="dir3-card-icon">🛒</div>
+                            <div class="dir3-card-title">Groceries</div>
+                            <div class="dir3-card-amount">$450</div>
+                            <div class="dir1-progress">
+                                <div class="dir1-progress-bar" style="width: 90%"></div>
+                            </div>
+                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #64748b;">$50 remaining</div>
+                        </div>
+                        <div class="dir3-card">
+                            <div class="dir3-card-icon">🍽️</div>
+                            <div class="dir3-card-title">Dining Out</div>
+                            <div class="dir3-card-amount">$180</div>
+                            <div class="dir1-progress">
+                                <div class="dir1-progress-bar" style="width: 72%"></div>
+                            </div>
+                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #64748b;">$70 remaining</div>
+                        </div>
+                        <div class="dir3-card">
+                            <div class="dir3-card-icon">🎬</div>
+                            <div class="dir3-card-title">Entertainment</div>
+                            <div class="dir3-card-amount">$120</div>
+                            <div class="dir1-progress">
+                                <div class="dir1-progress-bar warning" style="width: 96%"></div>
+                            </div>
+                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #64748b;">$5 remaining</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 4: Sidebar Navigation -->
+        <div class="direction" id="dir4">
+            <div class="direction-header">
+                <div class="direction-name">4. Sidebar Navigation</div>
+                <div class="direction-personality">Desktop-Optimized & Organized</div>
+                <div class="direction-description">Traditional sidebar navigation provides persistent access to all sections. Great for desktop users who want clear navigation and organized content areas.</div>
+                <div class="direction-features">
+                    <span class="feature-tag">Sidebar Nav</span>
+                    <span class="feature-tag">Desktop-First</span>
+                    <span class="feature-tag">Organized Sections</span>
+                    <span class="feature-tag">Persistent Navigation</span>
+                </div>
+            </div>
+            <div class="mockup">
+                <div class="dir4-layout">
+                    <div class="dir4-sidebar">
+                        <h2>FinSight</h2>
+                        <nav class="dir4-sidebar-nav">
+                            <a href="#" class="active">Dashboard</a>
+                            <a href="#">Transactions</a>
+                            <a href="#">Budget</a>
+                            <a href="#">Categories</a>
+                            <a href="#">Settings</a>
+                        </nav>
+                    </div>
+                    <div class="dir4-main">
+                        <div class="dir4-section">
+                            <div class="dir4-section-title">Budget Overview</div>
+                            <div class="dir4-stats">
+                                <div class="dir4-stat">
+                                    <div class="dir4-stat-value">$750</div>
+                                    <div class="dir4-stat-label">Spent</div>
+                                </div>
+                                <div class="dir4-stat">
+                                    <div class="dir4-stat-value">$875</div>
+                                    <div class="dir4-stat-label">Budget</div>
+                                </div>
+                                <div class="dir4-stat">
+                                    <div class="dir4-stat-value">$125</div>
+                                    <div class="dir4-stat-label">Remaining</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dir4-section">
+                            <div class="dir4-section-title">Categories</div>
+                            <div class="dir2-card" style="margin-bottom: 1rem;">
+                                <div class="dir2-card-header">
+                                    <div class="dir2-card-title">Groceries</div>
+                                    <div class="dir2-card-amount">$450 / $500</div>
+                                </div>
+                                <div class="dir2-progress-small">
+                                    <div class="dir1-progress-bar" style="width: 90%"></div>
+                                </div>
+                            </div>
+                            <div class="dir2-card">
+                                <div class="dir2-card-header">
+                                    <div class="dir2-card-title">Dining Out</div>
+                                    <div class="dir2-card-amount">$180 / $250</div>
+                                </div>
+                                <div class="dir2-progress-small">
+                                    <div class="dir1-progress-bar" style="width: 72%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 5: Minimal Focus -->
+        <div class="direction" id="dir5">
+            <div class="direction-header">
+                <div class="direction-name">5. Minimal Focus</div>
+                <div class="direction-personality">ChatGPT-Inspired Simplicity</div>
+                <div class="direction-description">Maximum white space, minimal distractions. Inspired by ChatGPT's clean interface. Perfect for users who want absolute clarity and focus on their financial data.</div>
+                <div class="direction-features">
+                    <span class="feature-tag">Centered Content</span>
+                    <span class="feature-tag">Maximum White Space</span>
+                    <span class="feature-tag">Minimal UI</span>
+                    <span class="feature-tag">Focused Experience</span>
+                </div>
+            </div>
+            <div class="mockup">
+                <div class="dir5-content">
+                    <div class="dir5-header">
+                        <h2>Your Budget</h2>
+                        <p>January 2025</p>
+                    </div>
+                    <div class="dir5-main-card">
+                        <div class="dir5-category">
+                            <div class="dir5-category-header">
+                                <div class="dir5-category-name">Groceries</div>
+                                <div class="dir5-category-amount">$450 / $500</div>
+                            </div>
+                            <div class="dir1-progress">
+                                <div class="dir1-progress-bar" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div class="dir5-category">
+                            <div class="dir5-category-header">
+                                <div class="dir5-category-name">Dining Out</div>
+                                <div class="dir5-category-amount">$180 / $250</div>
+                            </div>
+                            <div class="dir1-progress">
+                                <div class="dir1-progress-bar" style="width: 72%"></div>
+                            </div>
+                        </div>
+                        <div class="dir5-category">
+                            <div class="dir5-category-header">
+                                <div class="dir5-category-name">Entertainment</div>
+                                <div class="dir5-category-amount">$120 / $125</div>
+                            </div>
+                            <div class="dir1-progress">
+                                <div class="dir1-progress-bar warning" style="width: 96%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 6: Balanced Dashboard -->
+        <div class="direction" id="dir6">
+            <div class="direction-header">
+                <div class="direction-name">6. Balanced Dashboard</div>
+                <div class="direction-personality">Comprehensive & Clear</div>
+                <div class="direction-description">A balanced approach combining summary cards with detailed category views. Shows both high-level overview and detailed breakdowns. Perfect for users who want complete visibility.</div>
+                <div class="direction-features">
+                    <span class="feature-tag">Top Navigation</span>
+                    <span class="feature-tag">Summary Cards</span>
+                    <span class="feature-tag">Balanced Layout</span>
+                    <span class="feature-tag">Comprehensive View</span>
+                </div>
+            </div>
+            <div class="mockup">
+                <div class="dir6-nav">
+                    <div class="dir6-nav-content">
+                        <h2>FinSight</h2>
+                        <div class="dir2-nav-links">
+                            <a href="#">Dashboard</a>
+                            <a href="#">Transactions</a>
+                            <a href="#">Budget</a>
+                            <a href="#">Settings</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="dir6-content">
+                    <div class="dir6-top">
+                        <div class="dir6-summary-card">
+                            <div class="dir6-summary-label">Total Spent</div>
+                            <div class="dir6-summary-value">$750</div>
+                        </div>
+                        <div class="dir6-summary-card" style="background: linear-gradient(135deg, #0891b2 0%, #6366f1 100%);">
+                            <div class="dir6-summary-label">Budget</div>
+                            <div class="dir6-summary-value">$875</div>
+                        </div>
+                        <div class="dir6-summary-card" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
+                            <div class="dir6-summary-label">Remaining</div>
+                            <div class="dir6-summary-value">$125</div>
+                        </div>
+                    </div>
+                    <div class="dir6-categories">
+                        <div class="dir6-category-card">
+                            <div class="dir6-category-header">
+                                <div class="dir6-category-name">Groceries</div>
+                                <div class="dir6-category-budget">$450 / $500</div>
+                            </div>
+                            <div class="dir6-progress-large">
+                                <div class="dir1-progress-bar" style="width: 90%"></div>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #64748b;">$50 remaining</div>
+                        </div>
+                        <div class="dir6-category-card">
+                            <div class="dir6-category-header">
+                                <div class="dir6-category-name">Dining Out</div>
+                                <div class="dir6-category-budget">$180 / $250</div>
+                            </div>
+                            <div class="dir6-progress-large">
+                                <div class="dir1-progress-bar" style="width: 72%"></div>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #64748b;">$70 remaining</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDirection(num) {
+            // Hide all directions
+            document.querySelectorAll('.direction').forEach(dir => {
+                dir.classList.remove('active');
+            });
+            
+            // Remove active from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected direction
+            document.getElementById('dir' + num).classList.add('active');
+            
+            // Activate selected nav button
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
