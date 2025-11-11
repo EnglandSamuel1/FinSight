@@ -14,4 +14,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './'),
     },
   },
+  // Handle ESM modules
+  optimizeDeps: {
+    include: ['parse5'],
+  },
 })

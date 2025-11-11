@@ -4,13 +4,30 @@
  */
 export interface Category {
   id: string
-  user_id: string
+  userId: string
   name: string
-  description: string | null
-  created_at: string
-  updated_at: string
+  description?: string | null
+  createdAt: string
+  updatedAt: string
 }
 
+/**
+ * Input type for creating a category (API request)
+ */
+export interface CreateCategoryInput {
+  name: string
+  description?: string
+}
+
+/**
+ * Input type for updating a category (API request)
+ */
+export interface UpdateCategoryInput {
+  name?: string
+  description?: string
+}
+
+// Legacy types for database operations (snake_case)
 export interface CategoryInsert {
   user_id: string
   name: string

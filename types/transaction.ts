@@ -12,6 +12,7 @@ export interface Transaction {
   merchant: string
   description: string | null
   category_id: string | null
+  confidence: number | null // Categorization confidence score (0-100)
   is_duplicate: boolean
   created_at: string
   updated_at: string
@@ -24,6 +25,7 @@ export interface TransactionInsert {
   merchant: string
   description?: string | null
   category_id?: string | null
+  confidence?: number | null
   is_duplicate?: boolean
 }
 
@@ -33,6 +35,7 @@ export interface TransactionUpdate {
   merchant?: string
   description?: string | null
   category_id?: string | null
+  confidence?: number | null
   is_duplicate?: boolean
 }
 

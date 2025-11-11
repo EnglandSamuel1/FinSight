@@ -1,3 +1,4 @@
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
@@ -20,9 +21,7 @@ if (!supabaseAnonKey) {
 export async function createServerClient() {
   const cookieStore = await cookies()
   
-  // Type assertion needed: Supabase types don't fully support cookies option yet
-  // but it's supported at runtime in @supabase/supabase-js v2.81.0+
-  return createClient(supabaseUrl!, supabaseAnonKey!, {
+  return createSupabaseServerClient(supabaseUrl!, supabaseAnonKey!, {
     cookies: {
       getAll() {
         return cookieStore.getAll()
@@ -39,7 +38,7 @@ export async function createServerClient() {
         }
       },
     },
-  } as any)
+  })
 }
 
 /**

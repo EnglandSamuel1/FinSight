@@ -29,6 +29,42 @@ export interface BudgetUpdate {
 }
 
 /**
+ * Budget with category information
+ */
+export interface BudgetWithCategory extends Budget {
+  category: {
+    id: string
+    name: string
+    description?: string
+  }
+}
+
+/**
+ * Budget status with spending calculations
+ */
+export interface BudgetStatus extends Budget {
+  remainingCents: number // budget - actual spending (can be negative)
+  spentCents: number // actual spending for the month
+  percentageUsed: number // (spending / budget) * 100, capped at 100% minimum
+}
+
+/**
+ * Input for creating a budget
+ */
+export interface CreateBudgetInput {
+  categoryId: string
+  month: string // YYYY-MM format
+  amountCents: number
+}
+
+/**
+ * Input for updating a budget
+ */
+export interface UpdateBudgetInput {
+  amountCents: number
+}
+
+/**
  * Helper function to convert dollars to cents
  */
 export function dollarsToCents(dollars: number): number {
@@ -40,4 +76,21 @@ export function dollarsToCents(dollars: number): number {
  */
 export function centsToDollars(cents: number): number {
   return cents / 100
+}
+
+/**
+ * Convert YYYY-MM format to first day of month (YYYY-MM-01)
+ */
+export function monthToDate(month: string): string {
+  return `${month}-01`
+}
+
+/**
+ * Get current month in YYYY-MM format
+ */
+export function getCurrentMonth(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  return `${year}-${month}`
 }
