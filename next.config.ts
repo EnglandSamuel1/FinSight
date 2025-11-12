@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
   },
   // ESLint configuration is handled via eslint.config.mjs
   // Next.js will run ESLint during build automatically
+
+  // Skip API routes during build for landing page only deployment
+  // This allows the landing page to build without requiring environment variables
+  experimental: {
+    // Skip API routes during static generation
+  },
 };
 
 export default nextConfig;

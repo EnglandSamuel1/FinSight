@@ -6,12 +6,15 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl) {
-  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL')
-}
-
-if (!supabaseAnonKey) {
-  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY')
+// Only validate environment variables at runtime, not during build
+// This allows the landing page to build without Supabase configuration
+function validateEnvVars() {
+  if (!supabaseUrl) {
+    throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL')
+  }
+  if (!supabaseAnonKey) {
+    throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  }
 }
 
 /**
@@ -19,6 +22,7 @@ if (!supabaseAnonKey) {
  * Uses cookies to get the user's session.
  */
 export async function createServerClient() {
+  validateEnvVars() // Validate only when actually used
   const cookieStore = await cookies()
   
   return createSupabaseServerClient(supabaseUrl!, supabaseAnonKey!, {
@@ -47,6 +51,7 @@ export async function createServerClient() {
  * WARNING: Only use in API routes, never expose to client-side code.
  */
 export function createAdminClient() {
+  validateEnvVars() // Validate only when actually used
   if (!supabaseServiceRoleKey) {
     throw new Error('Missing env.SUPABASE_SERVICE_ROLE_KEY')
   }
