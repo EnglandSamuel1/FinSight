@@ -2,6 +2,7 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import Link from 'next/link';
 
+// Landing page component - deployed to Vercel
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
