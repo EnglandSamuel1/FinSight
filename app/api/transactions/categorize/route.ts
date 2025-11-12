@@ -187,7 +187,7 @@ export const POST = createRouteHandler(async (request: NextRequest, context) => 
       logger.warn('Categorization request validation failed', {
         requestId: context.requestId,
         userId: context.userId,
-        errors: err.errors,
+        errors: err.issues,
       })
       return error('Invalid request body', 400, 'VALIDATION_ERROR')
     }

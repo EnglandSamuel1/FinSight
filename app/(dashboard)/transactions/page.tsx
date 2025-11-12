@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { TransactionList } from '@/components/transactions/TransactionList'
 import { getCategories } from '@/lib/api/categories'
@@ -11,6 +11,10 @@ export default function TransactionsPage() {
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('')
   const [showUncategorizedOnly, setShowUncategorizedOnly] = useState(false)
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | undefined>()
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('')
+  const [minAmount, setMinAmount] = useState<string>('')
+  const [maxAmount, setMaxAmount] = useState<string>('')
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -24,13 +28,40 @@ export default function TransactionsPage() {
     fetchCategories()
   }, [])
 
+  // Debounce search input (AC: #3 - wait 300ms after user stops typing)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   // Don't set default date range - show all transactions by default
   // User can optionally filter by date range if needed
+
+  // Parse amount range (convert from dollars to cents for API, but display in dollars)
+  const amountRange = useCallback(() => {
+    const min = minAmount.trim() ? parseFloat(minAmount) : undefined
+    const max = maxAmount.trim() ? parseFloat(maxAmount) : undefined
+    
+    // Validate: min <= max if both are provided
+    if (min !== undefined && max !== undefined && min > max) {
+      return undefined // Invalid range, don't apply filter
+    }
+    
+    if (min !== undefined && max !== undefined) {
+      return { min, max }
+    }
+    return undefined
+  }, [minAmount, maxAmount])
 
   const filters = {
     categoryId: selectedCategoryFilter || undefined,
     dateRange,
     uncategorized: showUncategorizedOnly || undefined,
+    search: debouncedSearchQuery.trim() || undefined,
+    amountRange: amountRange(),
   }
 
   return (
@@ -47,6 +78,34 @@ export default function TransactionsPage() {
 
         {/* Filters */}
         <div className="mb-6 flex flex-wrap items-center gap-4 rounded-md border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          {/* Search Input (AC: #1, #3 - searchable by merchant/description with debouncing) */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="search-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Search:
+            </label>
+            <div className="relative">
+              <input
+                id="search-filter"
+                type="text"
+                placeholder="Merchant or description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  aria-label="Clear search"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             <label htmlFor="category-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Category:
@@ -77,6 +136,49 @@ export default function TransactionsPage() {
               />
               Uncategorized only
             </label>
+          </div>
+
+          {/* Amount Range Filter (AC: #1 - filterable by amount range) */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="min-amount" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Min Amount ($):
+            </label>
+            <input
+              id="min-amount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              value={minAmount}
+              onChange={(e) => {
+                const value = e.target.value
+                if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
+                  setMinAmount(value)
+                }
+              }}
+              className="w-24 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="max-amount" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Max Amount ($):
+            </label>
+            <input
+              id="max-amount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              value={maxAmount}
+              onChange={(e) => {
+                const value = e.target.value
+                if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
+                  setMaxAmount(value)
+                }
+              }}
+              className="w-24 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            />
           </div>
 
           <div className="flex items-center gap-2">
@@ -115,12 +217,15 @@ export default function TransactionsPage() {
             />
           </div>
 
-          {(selectedCategoryFilter || showUncategorizedOnly || dateRange) && (
+          {(selectedCategoryFilter || showUncategorizedOnly || dateRange || searchQuery || minAmount || maxAmount) && (
             <button
               onClick={() => {
                 setSelectedCategoryFilter('')
                 setShowUncategorizedOnly(false)
                 setDateRange(undefined)
+                setSearchQuery('')
+                setMinAmount('')
+                setMaxAmount('')
               }}
               className="ml-auto rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >

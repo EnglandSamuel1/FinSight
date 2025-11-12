@@ -17,6 +17,7 @@ const transactionInsertSchema = z.object({
   merchant: z.string().min(1, 'Merchant is required').max(255, 'Merchant must be 255 characters or less'),
   description: z.string().max(1000, 'Description must be 1000 characters or less').nullable().optional(),
   category_id: uuidSchema.nullable().optional(),
+  transaction_type: z.enum(['expense', 'income', 'transfer']).optional().default('expense'),
   is_duplicate: z.boolean().optional().default(false),
 })
 
@@ -32,6 +33,10 @@ const queryTransactionsSchema = z.object({
   startDate: dateSchema.optional(),
   endDate: dateSchema.optional(),
   categoryId: uuidSchema.optional(),
+  transactionType: z.enum(['expense', 'income', 'transfer']).optional(),
+  search: z.string().optional(),
+  minAmount: z.coerce.number().int().optional(),
+  maxAmount: z.coerce.number().int().optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
   offset: z.coerce.number().int().nonnegative().optional(),
 })
@@ -39,8 +44,8 @@ const queryTransactionsSchema = z.object({
 /**
  * GET /api/transactions
  * Query transactions with optional filters
- * 
- * Query params: ?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&categoryId=uuid&limit=number&offset=number
+ *
+ * Query params: ?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&categoryId=uuid&transactionType=expense|income|transfer&search=string&minAmount=number&maxAmount=number&limit=number&offset=number
  * Response: Transaction[]
  * Errors: 401 (unauthorized), 400 (validation error)
  */

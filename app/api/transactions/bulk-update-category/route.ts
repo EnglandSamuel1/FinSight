@@ -14,13 +14,14 @@ import { NextRequest } from 'next/server'
 const bulkUpdateCategorySchema = z.object({
   transactionIds: z.array(uuidSchema).min(1, 'At least one transaction ID is required'),
   category_id: uuidSchema.nullable(),
+  transaction_type: z.enum(['expense', 'income', 'transfer']).optional(),
 })
 
 /**
  * POST /api/transactions/bulk-update-category
- * Bulk update category for multiple transactions
- * 
- * Request: { transactionIds: string[], category_id: string | null }
+ * Bulk update category and/or transaction type for multiple transactions
+ *
+ * Request: { transactionIds: string[], category_id?: string | null, transaction_type?: 'expense' | 'income' | 'transfer' }
  * Response: { updated: number, transactions: Transaction[] }
  * Errors: 400 (validation error), 401 (unauthorized)
  */
@@ -29,22 +30,26 @@ export const POST = createRouteHandler(async (request: NextRequest, context) => 
     return error('Unauthorized', 401, 'UNAUTHORIZED')
   }
 
+  const userId = context.userId
+
   try {
     // Validate request body
-    const { transactionIds, category_id } = await validateBody(request, bulkUpdateCategorySchema)
+    const { transactionIds, category_id, transaction_type } = await validateBody(request, bulkUpdateCategorySchema)
 
     logger.info('Bulk updating transaction categories', {
       requestId: context.requestId,
-      userId: context.userId,
+      userId: userId,
       transactionCount: transactionIds.length,
       categoryId: category_id,
+      transactionType: transaction_type,
     })
 
     // Use service function to handle bulk update
     const updatedTransactions = await bulkUpdateTransactionCategory(
       transactionIds,
       category_id,
-      context.userId
+      userId,
+      transaction_type
     )
 
     // Trigger learning for each transaction category change (if category is not null)
@@ -52,7 +57,7 @@ export const POST = createRouteHandler(async (request: NextRequest, context) => 
       const learningPromises = updatedTransactions.map(async (transaction) => {
         try {
           await learnFromCorrection(
-            context.userId,
+            userId,
             {
               merchant: transaction.merchant,
               description: transaction.description,

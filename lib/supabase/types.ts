@@ -56,6 +56,7 @@ export interface Database {
           description: string | null
           category_id: string | null
           is_duplicate: boolean
+          transaction_type: 'expense' | 'income' | 'transfer'
           created_at: string
           updated_at: string
         }
@@ -68,6 +69,7 @@ export interface Database {
           description?: string | null
           category_id?: string | null
           is_duplicate?: boolean
+          transaction_type?: 'expense' | 'income' | 'transfer'
           created_at?: string
           updated_at?: string
         }
@@ -80,6 +82,7 @@ export interface Database {
           description?: string | null
           category_id?: string | null
           is_duplicate?: boolean
+          transaction_type?: 'expense' | 'income' | 'transfer'
           created_at?: string
           updated_at?: string
         }

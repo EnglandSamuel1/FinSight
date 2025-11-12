@@ -81,9 +81,10 @@ export const GET = createRouteHandler(async (request, context) => {
   const budgetStatuses: BudgetStatus[] = await Promise.all(
     budgets.map(async (budget) => {
       // Query transactions for this category in this month
+      // Only include expense transactions (exclude transfers and income from budget spending)
       const { data: transactions, error: transactionsError } = await supabase
         .from('transactions')
-        .select('amount_cents')
+        .select('amount_cents, transaction_type')
         .eq('user_id', userId)
         .eq('category_id', budget.category_id)
         .gte('date', monthStart)
@@ -95,14 +96,18 @@ export const GET = createRouteHandler(async (request, context) => {
         // Continue with zero spending if query fails
       }
 
-      // Calculate total spending (sum of amount_cents)
-      // Note: amount_cents is signed - negative for debits (spending), positive for credits (income)
-      // For spending calculation, we sum the absolute values of negative amounts (debits)
+      // Calculate total spending (sum of amount_cents for expense transactions only)
+      // Exclude transfers and income from budget spending calculations
       const spentCents =
         transactions?.reduce((sum, txn) => {
-          // If amount is negative (debit/spending), add its absolute value
-          // If amount is positive (credit/income), ignore it for spending calculation
-          return txn.amount_cents < 0 ? sum + Math.abs(txn.amount_cents) : sum
+          const transactionType = txn.transaction_type || 'expense' // Default to expense for backward compatibility
+
+          // Only count expense transactions towards budget spending
+          // Skip transfers and income
+          if (transactionType === 'expense') {
+            return sum + Math.abs(txn.amount_cents)
+          }
+          return sum
         }, 0) || 0
 
       // Calculate remaining budget

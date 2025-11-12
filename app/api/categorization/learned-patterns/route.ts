@@ -94,7 +94,7 @@ export const GET = createRouteHandler(async (request: NextRequest, context) => {
       logger.warn('Invalid query parameters for learned patterns', {
         requestId: context.requestId,
         userId: context.userId,
-        errors: err.errors,
+        errors: err.issues,
       })
       return error('Invalid query parameters', 400, 'VALIDATION_ERROR')
     }

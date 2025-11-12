@@ -71,7 +71,7 @@ export function TransactionUpload() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [parseResult, setParseResult] = useState<ParseResult | null>(null)
-  const [duplicates, setDuplicates] = useState<UploadResponse['duplicates']>(null)
+  const [duplicates, setDuplicates] = useState<UploadResponse['duplicates']>([])
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
   const [importingDuplicates, setImportingDuplicates] = useState(false)
   const [importStage, setImportStage] = useState<ImportStage>('idle')
@@ -203,7 +203,7 @@ export function TransactionUpload() {
 
                   toast.info(
                     `File "${response.fileName}" parsed: ${storedCount || successCount} transactions imported, ${duplicateCount} duplicates found`,
-                    { duration: 5000 }
+                    5000
                   )
                 }
               } else {
@@ -344,7 +344,7 @@ export function TransactionUpload() {
 
       toast.success(`Successfully imported ${data.data.created} duplicate transaction(s)`)
       setShowDuplicateDialog(false)
-      setDuplicates(null)
+      setDuplicates([])
       setSelectedFile(null)
       setUploadProgress(0)
       if (fileInputRef.current) {
@@ -361,7 +361,7 @@ export function TransactionUpload() {
 
   const handleSkipDuplicates = () => {
     setShowDuplicateDialog(false)
-    setDuplicates(null)
+    setDuplicates([])
     setSelectedFile(null)
     setUploadProgress(0)
     if (fileInputRef.current) {
@@ -491,7 +491,7 @@ export function TransactionUpload() {
       )}
 
       {/* Import Status - Show during upload and after completion */}
-      {(uploading || importStage !== 'idle') && importStage !== 'complete' && (
+      {importStage !== 'idle' && importStage !== 'complete' && (
         <ImportStatus
           stage={importStage}
           progress={uploadProgress}

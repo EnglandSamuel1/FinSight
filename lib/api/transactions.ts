@@ -67,6 +67,7 @@ export async function createTransactions(
     description: tx.description,
     category_id: tx.category_id,
     confidence: tx.confidence,
+    transaction_type: tx.transaction_type,
     is_duplicate: tx.is_duplicate,
     created_at: tx.created_at,
     updated_at: tx.updated_at,
@@ -79,7 +80,7 @@ export async function createTransactions(
  * Query transactions with filters
  * 
  * @param userId - Authenticated user ID
- * @param filters - Query filters (date range, category, pagination)
+ * @param filters - Query filters (date range, category, search, amount range, pagination)
  * @returns Array of transactions
  */
 export async function queryTransactions(
@@ -88,6 +89,10 @@ export async function queryTransactions(
     startDate?: string
     endDate?: string
     categoryId?: string
+    transactionType?: 'expense' | 'income' | 'transfer'
+    search?: string
+    minAmount?: number
+    maxAmount?: number
     limit?: number
     offset?: number
   } = {}
@@ -110,6 +115,27 @@ export async function queryTransactions(
   // Apply category filter
   if (filters.categoryId) {
     query = query.eq('category_id', filters.categoryId)
+  }
+
+  // Apply transaction type filter
+  if (filters.transactionType) {
+    query = query.eq('transaction_type', filters.transactionType)
+  }
+
+  // Apply amount range filter
+  if (filters.minAmount !== undefined) {
+    query = query.gte('amount_cents', filters.minAmount)
+  }
+  if (filters.maxAmount !== undefined) {
+    query = query.lte('amount_cents', filters.maxAmount)
+  }
+
+  // Apply search filter (case-insensitive search on merchant and description)
+  if (filters.search && filters.search.trim()) {
+    const searchTerm = filters.search.trim().replace(/%/g, '\\%').replace(/_/g, '\\_')
+    // Use ilike for case-insensitive pattern matching
+    // Search in merchant or description fields (OR condition)
+    query = query.or(`merchant.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
   }
 
   // Apply pagination
@@ -146,6 +172,7 @@ export async function queryTransactions(
     description: tx.description,
     category_id: tx.category_id,
     confidence: tx.confidence,
+    transaction_type: tx.transaction_type,
     is_duplicate: tx.is_duplicate,
     created_at: tx.created_at,
     updated_at: tx.updated_at,
@@ -199,6 +226,7 @@ export async function getTransactionById(
     description: data.description,
     category_id: data.category_id,
     confidence: data.confidence,
+    transaction_type: data.transaction_type,
     is_duplicate: data.is_duplicate,
     created_at: data.created_at,
     updated_at: data.updated_at,
@@ -223,6 +251,7 @@ export async function updateTransaction(
     description?: string | null
     category_id?: string | null
     confidence?: number | null
+    transaction_type?: 'expense' | 'income' | 'transfer'
     is_duplicate?: boolean
   }
 ): Promise<Transaction> {
@@ -299,6 +328,7 @@ export async function updateTransaction(
     description: data.description,
     category_id: data.category_id,
     confidence: data.confidence,
+    transaction_type: data.transaction_type,
     is_duplicate: data.is_duplicate,
     created_at: data.created_at,
     updated_at: data.updated_at,
@@ -353,17 +383,19 @@ export async function deleteTransaction(
 }
 
 /**
- * Bulk update category for multiple transactions
- * 
+ * Bulk update category and/or transaction type for multiple transactions
+ *
  * @param transactionIds - Array of transaction IDs to update
  * @param categoryId - Category ID to set (null to uncategorize)
  * @param userId - Authenticated user ID (for authorization check)
+ * @param transactionType - Optional transaction type to set
  * @returns Updated transactions
  */
 export async function bulkUpdateTransactionCategory(
   transactionIds: string[],
   categoryId: string | null,
-  userId: string
+  userId: string,
+  transactionType?: 'expense' | 'income' | 'transfer'
 ): Promise<Transaction[]> {
   if (transactionIds.length === 0) {
     return []
@@ -427,10 +459,18 @@ export async function bulkUpdateTransactionCategory(
     }
   }
 
-  // Update all specified transactions with new category_id in single database operation
+  // Build update object with category_id and optionally transaction_type
+  const updateData: { category_id: string | null; transaction_type?: 'expense' | 'income' | 'transfer' } = {
+    category_id: categoryId,
+  }
+  if (transactionType) {
+    updateData.transaction_type = transactionType
+  }
+
+  // Update all specified transactions with new category_id and/or transaction_type in single database operation
   const { data: updatedTransactions, error: updateError } = await supabase
     .from('transactions')
-    .update({ category_id: categoryId })
+    .update(updateData)
     .eq('user_id', userId)
     .in('id', transactionIds)
     .select()
@@ -464,6 +504,7 @@ export async function bulkUpdateTransactionCategory(
     description: tx.description,
     category_id: tx.category_id,
     confidence: tx.confidence,
+    transaction_type: tx.transaction_type,
     is_duplicate: tx.is_duplicate,
     created_at: tx.created_at,
     updated_at: tx.updated_at,

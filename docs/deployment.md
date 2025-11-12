@@ -154,6 +154,103 @@ If a migration fails or causes issues:
 
 > **Note:** For MVP, rollback is manual. Consider automated migration tools for future versions.
 
+## Production Database Connection
+
+### Testing Production Database Connection
+
+After deploying to production, verify the database connection using the production database test endpoint:
+
+#### 1. Test with Service Role Key
+
+The production database test endpoint (`/api/test-production-db`) verifies:
+
+- **Service Role Connection:** Tests database connectivity using the service role key (admin client)
+- **Table Existence:** Verifies all required tables exist in production
+- **RLS Policies:** Verifies Row Level Security policies are enabled and working correctly
+- **Connection Details:** Validates environment variables are properly configured
+
+**Usage:**
+
+```bash
+# Requires authentication (use your session cookie or API token)
+curl -X GET https://your-app.vercel.app/api/test-production-db \
+  -H "Cookie: your-session-cookie"
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "All production database tests passed",
+  "tests": {
+    "serviceRoleConnection": {
+      "passed": true
+    },
+    "tableExistence": {
+      "passed": true,
+      "tables": {
+        "categories": true,
+        "transactions": true,
+        "budgets": true,
+        "categorization_rules": true,
+        "chat_messages": true
+      }
+    },
+    "rlsPolicies": {
+      "passed": true,
+      "note": "RLS status verified indirectly..."
+    },
+    "connectionDetails": {
+      "supabaseUrl": "https://your-project.supabase.co...",
+      "serviceRoleKeySet": true,
+      "anonKeySet": true
+    }
+  },
+  "timestamp": "2025-11-11T..."
+}
+```
+
+#### 2. Verify RLS Policies Directly
+
+To directly verify RLS policies are enabled, run this SQL query in Supabase Dashboard → SQL Editor:
+
+```sql
+SELECT 
+  tablename, 
+  rowsecurity 
+FROM pg_tables 
+WHERE schemaname = 'public' 
+  AND tablename IN ('categories', 'transactions', 'budgets', 'categorization_rules', 'chat_messages');
+```
+
+**Expected Result:** All tables should have `rowsecurity = true`
+
+#### 3. Production Database Connection Details
+
+**Connection Method:**
+- **Client-side:** Uses `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (public variables)
+- **Server-side (User Context):** Uses same public variables with user session from cookies
+- **Server-side (Admin):** Uses `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (server-only)
+
+**Security Notes:**
+- Service role key bypasses RLS policies - use only in API routes, never expose to client
+- RLS policies enforce data isolation per user in production
+- Admin client (`createAdminClient()`) should only be used for admin operations
+
+**Connection Pooling:**
+- Supabase client handles connection pooling automatically
+- No manual pool configuration needed
+- Connections are managed by Supabase infrastructure
+
+**Verification Checklist:**
+- [ ] Service role key connection test passes
+- [ ] All required tables exist in production
+- [ ] RLS policies are enabled on all tables
+- [ ] Environment variables are correctly set in Vercel
+- [ ] Database queries work correctly with user authentication
+- [ ] Admin operations work correctly with service role key
+
 ## Deployment Process
 
 ### Automatic Deployment

@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment node
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET, POST } from './route'
 import { NextRequest } from 'next/server'
@@ -313,8 +316,7 @@ describe('GET /api/transactions', () => {
     const data = await response.json()
 
     expect(response.status).toBe(200)
-    expect(data.success).toBe(true)
-    expect(data.data).toHaveLength(1)
+    expect(data).toHaveLength(1)
     expect(queryTransactions).toHaveBeenCalledWith('user-1', {})
   })
 
@@ -350,6 +352,67 @@ describe('GET /api/transactions', () => {
     })
   })
 
+  it('should apply search filter', async () => {
+    vi.mocked(queryTransactions).mockResolvedValue([])
+
+    const request = createRequest({
+      search: 'starbucks',
+    })
+    const context = createContext('user-1')
+
+    await GET(request, context)
+
+    expect(queryTransactions).toHaveBeenCalledWith('user-1', {
+      search: 'starbucks',
+    })
+  })
+
+  it('should apply amount range filter', async () => {
+    vi.mocked(queryTransactions).mockResolvedValue([])
+
+    const request = createRequest({
+      minAmount: '1000',
+      maxAmount: '5000',
+    })
+    const context = createContext('user-1')
+
+    await GET(request, context)
+
+    expect(queryTransactions).toHaveBeenCalledWith('user-1', {
+      minAmount: 1000,
+      maxAmount: 5000,
+    })
+  })
+
+  it('should apply all filters together', async () => {
+    vi.mocked(queryTransactions).mockResolvedValue([])
+
+    const request = createRequest({
+      startDate: '2024-01-01',
+      endDate: '2024-01-31',
+      categoryId: 'cat-123',
+      search: 'coffee',
+      minAmount: '500',
+      maxAmount: '2000',
+      limit: '25',
+      offset: '0',
+    })
+    const context = createContext('user-1')
+
+    await GET(request, context)
+
+    expect(queryTransactions).toHaveBeenCalledWith('user-1', {
+      startDate: '2024-01-01',
+      endDate: '2024-01-31',
+      categoryId: 'cat-123',
+      search: 'coffee',
+      minAmount: 500,
+      maxAmount: 2000,
+      limit: 25,
+      offset: 0,
+    })
+  })
+
   it('should return 401 if user not authenticated', async () => {
     const request = createRequest()
     const context = createContext('')
@@ -358,6 +421,7 @@ describe('GET /api/transactions', () => {
     const data = await response.json()
 
     expect(response.status).toBe(401)
-    expect(data.success).toBe(false)
+    expect(data.error).toBeDefined()
+    expect(data.error.message).toBe('Unauthorized')
   })
 })

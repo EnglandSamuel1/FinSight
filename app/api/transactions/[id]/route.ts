@@ -17,6 +17,7 @@ const transactionUpdateSchema = z.object({
   merchant: z.string().min(1, 'Merchant is required').max(255, 'Merchant must be 255 characters or less').optional(),
   description: z.string().max(1000, 'Description must be 1000 characters or less').nullable().optional(),
   category_id: uuidSchema.nullable().optional(),
+  transaction_type: z.enum(['expense', 'income', 'transfer']).optional(),
   is_duplicate: z.boolean().optional(),
 })
 
@@ -72,8 +73,8 @@ export const GET = createRouteHandler(async (request: NextRequest, context) => {
 /**
  * PUT /api/transactions/[id]
  * Update a transaction
- * 
- * Request: { date?: string, amount_cents?: number, merchant?: string, description?: string | null, category_id?: string | null, is_duplicate?: boolean }
+ *
+ * Request: { date?: string, amount_cents?: number, merchant?: string, description?: string | null, category_id?: string | null, transaction_type?: 'expense' | 'income' | 'transfer', is_duplicate?: boolean }
  * Response: Transaction
  * Errors: 404 (not found), 400 (validation error), 401 (unauthorized)
  */

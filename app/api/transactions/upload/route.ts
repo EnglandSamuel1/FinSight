@@ -11,6 +11,7 @@ import { handleDatabaseError } from '@/lib/supabase/utils'
 import { z } from 'zod'
 import { NextRequest } from 'next/server'
 import type { Category } from '@/types/category'
+import type { Transaction } from '@/types/transaction'
 
 /**
  * Maximum file size: 10MB
@@ -150,7 +151,7 @@ export const POST = createRouteHandler(async (request: NextRequest, context) => 
       duplicateHashes: Set<string>
     } = { duplicates: [], duplicateHashes: new Set() }
     let duplicateCount = 0
-    let storedTransactions = []
+    let storedTransactions: Transaction[] = []
     let storedCount = 0
 
     if (parseResult.transactions.length > 0) {
@@ -165,7 +166,7 @@ export const POST = createRouteHandler(async (request: NextRequest, context) => 
         date: tx.date,
         amount_cents: tx.amount_cents,
         merchant: tx.merchant,
-        description: tx.description || null,
+        description: (tx.description || null) as string | null,
         category_id: null, // Categories assigned later via categorization
         is_duplicate: false, // Will be set by filterDuplicates if needed
       }))
@@ -224,7 +225,12 @@ export const POST = createRouteHandler(async (request: NextRequest, context) => 
           }))
 
           // Categorize each transaction (with userId for learned patterns)
-          const categorizationResults = await categorizeTransactions(transactionsToInsert, userCategories, context.userId)
+          // Map to format expected by categorizeTransactions
+          const transactionsForCategorization = transactionsToInsert.map((tx) => ({
+            merchant: tx.merchant,
+            description: tx.description ?? null,
+          }))
+          const categorizationResults = await categorizeTransactions(transactionsForCategorization, userCategories, context.userId)
 
           // Apply categorization results to transactions
           transactionsToInsert.forEach((tx, index) => {

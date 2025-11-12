@@ -1,14 +1,18 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, memo, useCallback } from 'react'
 import { getTransactionsClient, bulkUpdateTransactionCategoryClient } from '@/lib/api/transactions-client'
 import { getCategories } from '@/lib/api/categories'
 import { getLearnedPatterns, type LearnedPattern } from '@/lib/api/categorization'
 import { TransactionCategoryEditor } from './TransactionCategoryEditor'
 import { CategorySelector } from './CategorySelector'
+import { ConfidenceBadge } from './ConfidenceBadge'
+import { TransactionTypeBadge } from './TransactionTypeBadge'
+import { Pagination } from './Pagination'
 import { toast } from '@/components/ui/toast'
 import type { Transaction } from '@/types/transaction'
 import type { Category } from '@/types/category'
+import { dollarsToCents } from '@/types/transaction'
 
 export interface TransactionListProps {
   transactions?: Transaction[]
@@ -18,6 +22,8 @@ export interface TransactionListProps {
     categoryId?: string
     dateRange?: { start: string; end: string }
     uncategorized?: boolean
+    search?: string
+    amountRange?: { min: number; max: number }
   }
   sortBy?: 'date' | 'amount' | 'merchant' | 'category'
   sortOrder?: 'asc' | 'desc'
@@ -47,38 +53,82 @@ export function TransactionList({
   const [filters, setFilters] = useState(providedFilters || {})
   const [isBulkUpdating, setIsBulkUpdating] = useState(false)
   const [bulkCategoryId, setBulkCategoryId] = useState<string | null>(null)
+  
+  // Pagination state (AC: #1, #2 - server-side pagination for large lists)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const [totalItems, setTotalItems] = useState(0)
 
-  // Fetch transactions if not provided
-  useEffect(() => {
+  // Fetch transactions with server-side filtering and pagination
+  const fetchTransactions = useCallback(async () => {
     if (providedTransactions) {
       setTransactions(providedTransactions)
       setLoading(false)
+      setTotalItems(providedTransactions.length)
       return
     }
 
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const filters: any = {}
-        if (providedFilters?.dateRange) {
-          filters.startDate = providedFilters.dateRange.start
-          filters.endDate = providedFilters.dateRange.end
-        }
-        if (providedFilters?.categoryId) {
-          filters.categoryId = providedFilters.categoryId
-        }
-        const data = await getTransactionsClient(filters)
-        setTransactions(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load transactions')
-      } finally {
-        setLoading(false)
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // Build API filters for server-side filtering
+      const apiFilters: any = {
+        limit: itemsPerPage,
+        offset: (currentPage - 1) * itemsPerPage,
       }
+      
+      if (providedFilters?.dateRange) {
+        apiFilters.startDate = providedFilters.dateRange.start
+        apiFilters.endDate = providedFilters.dateRange.end
+      }
+      
+      if (providedFilters?.categoryId) {
+        apiFilters.categoryId = providedFilters.categoryId
+      }
+      
+      if (providedFilters?.search) {
+        apiFilters.search = providedFilters.search
+      }
+      
+      if (providedFilters?.amountRange) {
+        if (providedFilters.amountRange.min !== undefined) {
+          apiFilters.minAmount = dollarsToCents(providedFilters.amountRange.min)
+        }
+        if (providedFilters.amountRange.max !== undefined) {
+          apiFilters.maxAmount = dollarsToCents(providedFilters.amountRange.max)
+        }
+      }
+      
+      const data = await getTransactionsClient(apiFilters)
+      setTransactions(data)
+      
+      // For now, we'll estimate total items based on returned data
+      // In a real implementation, the API should return total count
+      // If we got a full page, there might be more; if less, we're at the end
+      if (data.length === itemsPerPage) {
+        // Estimate: assume there are more (we'll need API to return total count for accuracy)
+        setTotalItems((currentPage * itemsPerPage) + 1) // Conservative estimate
+      } else {
+        setTotalItems((currentPage - 1) * itemsPerPage + data.length)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load transactions')
+      setTransactions([])
+      setTotalItems(0)
+    } finally {
+      setLoading(false)
     }
+  }, [providedTransactions, providedFilters, currentPage, itemsPerPage])
 
+  useEffect(() => {
     fetchTransactions()
-  }, [providedTransactions, providedFilters])
+  }, [fetchTransactions])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [providedFilters?.categoryId, providedFilters?.dateRange, providedFilters?.search, providedFilters?.amountRange])
 
   // Fetch categories for display and filtering
   useEffect(() => {
@@ -167,22 +217,18 @@ export function TransactionList({
     return category?.name || 'Unknown'
   }
 
-  // Filter transactions
+  // Filter transactions (client-side filtering only for uncategorized filter)
+  // All other filtering is done server-side via API
   const filteredTransactions = useMemo(() => {
     let filtered = [...transactions]
 
-    // Apply uncategorized filter
-    if (filters.uncategorized) {
+    // Apply uncategorized filter (client-side since API doesn't support it directly)
+    if (providedFilters?.uncategorized) {
       filtered = filtered.filter((tx) => !tx.category_id)
     }
 
-    // Apply category filter (if not already filtered by API)
-    if (filters.categoryId && !providedFilters?.categoryId) {
-      filtered = filtered.filter((tx) => tx.category_id === filters.categoryId)
-    }
-
     return filtered
-  }, [transactions, filters, providedFilters])
+  }, [transactions, providedFilters?.uncategorized])
 
   // Sort transactions
   const sortedTransactions = useMemo(() => {
@@ -219,6 +265,10 @@ export function TransactionList({
 
     return sorted
   }, [filteredTransactions, sortBy, sortOrder, categories])
+
+  // Pagination (server-side, so we use transactions directly)
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const paginatedTransactions = sortedTransactions // Already paginated by server
 
   // Selection handlers
   const handleSelectAll = (checked: boolean) => {
@@ -306,13 +356,48 @@ export function TransactionList({
     }
   }
 
-  // Loading state
+  // Loading state with skeleton UI (AC: #2 - loading states)
   if (loading) {
     return (
-      <div className={`flex items-center justify-center py-12 ${className}`}>
-        <div className="text-center">
-          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading transactions...</p>
+      <div className={className}>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th scope="col" className="w-12 px-3 py-3 text-left"></th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Amount</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Merchant</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Category</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+              {Array.from({ length: itemsPerPage }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-3 py-4">
+                    <div className="h-4 w-4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="h-4 w-16 rounded bg-gray-200 dark:bg-gray-700 ml-auto"></div>
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="h-4 w-40 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     )
@@ -329,7 +414,7 @@ export function TransactionList({
 
   // Empty state
   if (sortedTransactions.length === 0) {
-    const hasFilters = filters.categoryId || filters.uncategorized || filters.dateRange
+    const hasFilters = providedFilters?.categoryId || providedFilters?.uncategorized || providedFilters?.dateRange || providedFilters?.search || providedFilters?.amountRange
     return (
       <div className={`text-center py-12 ${className}`}>
         <p className="text-gray-600 dark:text-gray-400">
@@ -410,6 +495,9 @@ export function TransactionList({
               >
                 Amount {sortBy === 'amount' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Type
+              </th>
               <th
                 scope="col"
                 className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -430,57 +518,115 @@ export function TransactionList({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-            {sortedTransactions.map((transaction) => (
-              <tr
+            {paginatedTransactions.map((transaction) => (
+              <TransactionRow
                 key={transaction.id}
-                className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                  selectedIds.has(transaction.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                }`}
-              >
-                <td className="px-3 py-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(transaction.id)}
-                    onChange={(e) => handleSelectTransaction(transaction.id, e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </td>
-                <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">
-                  {formatDate(transaction.date)}
-                </td>
-                <td className="px-3 py-2 text-sm text-right font-medium text-gray-900 dark:text-gray-100">
-                  {formatAmount(transaction.amount_cents)}
-                </td>
-                <td className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {transaction.merchant}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <TransactionCategoryEditor
-                      transactionId={transaction.id}
-                      currentCategoryId={transaction.category_id}
-                      onUpdate={(categoryId) => handleCategoryChange(transaction.id, categoryId)}
-                      showUndo={true}
-                      className="min-w-[150px]"
-                    />
-                    {matchesLearnedPattern(transaction) && (
-                      <span
-                        className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
-                        title="This transaction was categorized using a learned pattern"
-                      >
-                        Learned
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400">
-                  {transaction.description || '-'}
-                </td>
-              </tr>
+                transaction={transaction}
+                isSelected={selectedIds.has(transaction.id)}
+                onSelect={(checked: boolean) => handleSelectTransaction(transaction.id, checked)}
+                onCategoryChange={(categoryId: string | null) => handleCategoryChange(transaction.id, categoryId)}
+                matchesLearnedPattern={matchesLearnedPattern(transaction)}
+              />
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Component (AC: #1, #2 - server-side pagination) */}
+      {totalPages > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+          pageSizeOptions={[10, 25, 50, 100]}
+        />
+      )}
     </div>
   )
 }
+
+// Memoized Transaction Row Component (AC: #2 - prevent unnecessary re-renders)
+interface TransactionRowProps {
+  transaction: Transaction
+  isSelected: boolean
+  onSelect: (checked: boolean) => void
+  onCategoryChange: (categoryId: string | null) => Promise<void>
+  matchesLearnedPattern: boolean
+}
+
+const TransactionRow = memo(function TransactionRow({
+  transaction,
+  isSelected,
+  onSelect,
+  onCategoryChange,
+  matchesLearnedPattern,
+}: TransactionRowProps) {
+  const formatAmount = (cents: number): string => {
+    return `$${(cents / 100).toFixed(2)}`
+  }
+
+  const formatDate = (dateStr: string): string => {
+    try {
+      const date = new Date(dateStr)
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    } catch {
+      return dateStr
+    }
+  }
+
+  return (
+    <tr
+      className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+        isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+      }`}
+    >
+      <td className="px-3 py-2">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onSelect(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+      </td>
+      <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">
+        {formatDate(transaction.date)}
+      </td>
+      <td className="px-3 py-2 text-sm text-right font-medium text-gray-900 dark:text-gray-100">
+        {formatAmount(transaction.amount_cents)}
+      </td>
+      <td className="px-3 py-2">
+        <TransactionTypeBadge type={transaction.transaction_type} />
+      </td>
+      <td className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+        {transaction.merchant}
+      </td>
+      <td className="px-3 py-2">
+        <div className="flex items-center gap-2">
+          <TransactionCategoryEditor
+            transactionId={transaction.id}
+            currentCategoryId={transaction.category_id}
+            currentTransactionType={transaction.transaction_type}
+            onUpdate={onCategoryChange}
+            showUndo={true}
+            className="min-w-[150px]"
+          />
+          <ConfidenceBadge confidence={transaction.confidence} size="sm" />
+          {matchesLearnedPattern && (
+            <span
+              className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
+              title="This transaction was categorized using a learned pattern"
+            >
+              Learned
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400">
+        {transaction.description || '-'}
+      </td>
+    </tr>
+  )
+})

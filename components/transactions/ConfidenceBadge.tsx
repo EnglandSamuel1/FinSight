@@ -9,10 +9,10 @@ interface ConfidenceBadgeProps {
 /**
  * ConfidenceBadge displays a visual indicator of categorization confidence
  *
- * Confidence levels:
- * - High (90-100%): Green badge
- * - Medium (70-89%): Yellow badge
- * - Low (0-69%): Orange badge
+ * Confidence levels (per AC #1):
+ * - High (80-100%): Green badge
+ * - Medium (50-79%): Yellow badge
+ * - Low (<50%): Red badge
  * - null: Not displayed
  */
 export function ConfidenceBadge({
@@ -32,14 +32,14 @@ export function ConfidenceBadge({
     bgColor: string
     borderColor: string
   } => {
-    if (conf >= 90) {
+    if (conf >= 80) {
       return {
         label: 'High',
         color: 'text-green-700 dark:text-green-300',
         bgColor: 'bg-green-100 dark:bg-green-900/30',
         borderColor: 'border-green-300 dark:border-green-700'
       }
-    } else if (conf >= 70) {
+    } else if (conf >= 50) {
       return {
         label: 'Medium',
         color: 'text-yellow-700 dark:text-yellow-300',
@@ -49,9 +49,9 @@ export function ConfidenceBadge({
     } else {
       return {
         label: 'Low',
-        color: 'text-orange-700 dark:text-orange-300',
-        bgColor: 'bg-orange-100 dark:bg-orange-900/30',
-        borderColor: 'border-orange-300 dark:border-orange-700'
+        color: 'text-red-700 dark:text-red-300',
+        bgColor: 'bg-red-100 dark:bg-red-900/30',
+        borderColor: 'border-red-300 dark:border-red-700'
       }
     }
   }

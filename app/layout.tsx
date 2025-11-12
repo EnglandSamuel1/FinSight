@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ToastContainer } from "@/components/ui/toast";
+import { Navigation } from "@/components/layout/Navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
       >
         <ErrorBoundary>
           <AuthProvider>
+            <Navigation />
             {children}
             <ToastContainer />
           </AuthProvider>
