@@ -6,6 +6,7 @@ import { getCategories } from '@/lib/api/categories'
 import { getLearnedPatterns, type LearnedPattern } from '@/lib/api/categorization'
 import { TransactionCategoryEditor } from './TransactionCategoryEditor'
 import { CategorySelector } from './CategorySelector'
+import { TransactionTypeSelector } from './TransactionTypeSelector'
 import { ConfidenceBadge } from './ConfidenceBadge'
 import { TransactionTypeBadge } from './TransactionTypeBadge'
 import { Pagination } from './Pagination'
@@ -53,6 +54,7 @@ export function TransactionList({
   const [filters, setFilters] = useState(providedFilters || {})
   const [isBulkUpdating, setIsBulkUpdating] = useState(false)
   const [bulkCategoryId, setBulkCategoryId] = useState<string | null>(null)
+  const [bulkTransactionType, setBulkTransactionType] = useState<'expense' | 'income' | 'transfer' | undefined>(undefined)
   
   // Pagination state (AC: #1, #2 - server-side pagination for large lists)
   const [currentPage, setCurrentPage] = useState(1)
@@ -320,32 +322,45 @@ export function TransactionList({
 
   // Bulk category update handler
   const handleBulkCategoryUpdate = async () => {
-    if (selectedIds.size === 0 || bulkCategoryId === undefined) return
+    if (selectedIds.size === 0 || (bulkCategoryId === undefined && bulkTransactionType === undefined)) return
 
     setIsBulkUpdating(true)
     const transactionIds = Array.from(selectedIds)
 
     try {
       if (onBulkCategoryChange) {
-        await onBulkCategoryChange(transactionIds, bulkCategoryId)
+        await onBulkCategoryChange(transactionIds, bulkCategoryId || null)
       } else {
-        await bulkUpdateTransactionCategoryClient(transactionIds, bulkCategoryId)
+        await bulkUpdateTransactionCategoryClient(transactionIds, bulkCategoryId || null, bulkTransactionType)
         toast.success(`Updated ${transactionIds.length} transaction(s)`)
       }
 
       // Update local state
       setTransactions((prev) =>
-        prev.map((tx) => (selectedIds.has(tx.id) ? { ...tx, category_id: bulkCategoryId } : tx))
+        prev.map((tx) => {
+          if (selectedIds.has(tx.id)) {
+            const updates: Partial<Transaction> = {}
+            if (bulkCategoryId !== undefined) {
+              updates.category_id = bulkCategoryId
+            }
+            if (bulkTransactionType !== undefined) {
+              updates.transaction_type = bulkTransactionType
+            }
+            return { ...tx, ...updates }
+          }
+          return tx
+        })
       )
 
       // Clear selection
       setSelectedIds(new Set())
       setBulkCategoryId(null)
+      setBulkTransactionType(undefined)
 
       // Trigger dashboard refresh if available
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('transaction-category-updated', {
-          detail: { transactionIds, categoryId: bulkCategoryId }
+          detail: { transactionIds, categoryId: bulkCategoryId, transactionType: bulkTransactionType }
         }))
       }
     } catch (err) {
@@ -433,29 +448,39 @@ export function TransactionList({
     <div className={className}>
       {/* Bulk Action Toolbar */}
       {selectedIds.size > 0 && (
-        <div className="mb-4 flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/30">
-          <span className="text-sm font-medium text-blue-900 dark:text-blue-400">
-            {selectedIds.size} transaction{selectedIds.size !== 1 ? 's' : ''} selected
-          </span>
-          <div className="flex items-center gap-2">
+        <div className="mb-4 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/30">
+          <div className="mb-2">
+            <span className="text-sm font-medium text-blue-900 dark:text-blue-400">
+              {selectedIds.size} transaction{selectedIds.size !== 1 ? 's' : ''} selected
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             <CategorySelector
               value={bulkCategoryId}
               onChange={setBulkCategoryId}
               disabled={isBulkUpdating}
-              placeholder="Select category"
-              className="w-48"
+              placeholder="Select category (optional)"
+              className="w-56"
+            />
+            <TransactionTypeSelector
+              value={bulkTransactionType || 'expense'}
+              onChange={setBulkTransactionType}
+              disabled={isBulkUpdating}
+              showLabel={false}
+              className="w-56"
             />
             <button
               onClick={handleBulkCategoryUpdate}
-              disabled={isBulkUpdating || bulkCategoryId === undefined}
+              disabled={isBulkUpdating || (bulkCategoryId === undefined && bulkTransactionType === undefined)}
               className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
-              {isBulkUpdating ? 'Updating...' : 'Update Category'}
+              {isBulkUpdating ? 'Updating...' : 'Update'}
             </button>
             <button
               onClick={() => {
                 setSelectedIds(new Set())
                 setBulkCategoryId(null)
+                setBulkTransactionType(undefined)
               }}
               className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             >
